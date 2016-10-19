@@ -1,0 +1,99 @@
+---
+output: html_document
+---
+ 
+```{r Directorio, echo=FALSE ,message=FALSE, results='hide'}
+directorio <- "C:/Users/Hector/Desktop/SESION 20" 
+knitr:: opts_knit$set(root.dir = directorio)
+
+knitr::opts_chunk$set(fig.path = "./GRAFICAS/EXPLORATORIAS/Grafica_", fig.align = 'center',
+                         fig.width = 12, fig.height = 8,
+                         cache.path = "CACHE/Cache_", cache = TRUE,
+                         eval = TRUE,
+                         warning = FALSE, message = FALSE,
+                         echo = TRUE,
+                         comment = NA)
+
+paquetes.utilizados <- c("lubridate", "dplyr", "maps", "reshape2",
+                         "mapproj", "ggplot2", "scales", "plyr", "knitr",
+                         "xtable", "tidyr","reshape2","xtable")
+paquetes.instalados <- rownames(installed.packages())
+paquetes.por.instalar <- setdiff(paquetes.utilizados, paquetes.instalados)
+
+if(length(paquetes.por.instalar) != 0) install.packages(paquetes.por.instalar,
+                                                        repos = "http://cran.us.r-project.org")
+
+lapply(paquetes.utilizados, library, character.only = TRUE)
+```
+
+
+```{r}
+generar.factores.inflacion <- function(archivo.csv, 
+                                       fecha.valuacion, 
+                                       vector.fechas, 
+                                       vector.montos) 
+{
+  archivo.texto <- readLines(archivo.csv)
+  linea.inicial <- grep(".*SP1*", archivo.texto)
+
+  datos.IPN <- read.csv(archivo.csv, 
+                      skip = linea.inicial - 1, 
+                      header = TRUE, 
+                      stringsAsFactors = FALSE)
+ datos.IPN <- datos.IPN[, 1:2]
+ datos.IPN$Fecha <- as.Date(datos.IPN$Fecha, format = "%d/%m/%Y")
+  
+ b <- match(vector.fechas,datos.IPN$Fecha)
+ valores <-  datos.IPN[b,]
+
+ a <- match(fecha.valuacion,datos.IPN$Fecha)
+ aa <- datos.IPN$SP1[a]
+  
+
+ for(i in 1:length(b))
+ {
+   valores[i,2] = ((aa-valores[i,2])/aa)*vector.montos[i]
+ }   
+   
+  return(valores[,2])
+}
+```
+
+
+```{r}
+archivo.texto <- readLines("Consulta_Banxico_pib.csv")
+linea.inicial <- grep(".*SR10*", archivo.texto)
+
+datos.pib <- read.csv("Consulta_Banxico_pib.csv", 
+                      skip = linea.inicial - 1, 
+                      header = TRUE, 
+                      stringsAsFactors = FALSE)
+datos.pib <- datos.pib[, 1:2]
+datos.pib$Fecha <- as.Date(datos.pib$Fecha, format = "%d/%m/%Y")
+
+
+
+
+plot(datos.pib$Fecha,
+     generar.factores.inflacion("Consulta_Banxico.csv", 
+                                as.Date("2016-02-01"),
+                                datos.pib$Fecha, 
+                                datos.pib$SR10),
+     ylim = c(400000, 13651000),
+     type = "o", pch = 19,
+     main = "PIB nominal vs real",
+     ylab = "PIB nominal / real", 
+     xlab = "Año"
+     )
+lines(datos.pib$Fecha, datos.pib$SR10, type = "o", pch = 19, col = "blue")
+legend('topleft', 
+       c("nominal", "real"), 
+       lty = 1, 
+       col = c('black', 'blue'), 
+       bty = 'n', 
+       cex = .75)
+```
+
+#Descripcion del comportamiento del PIB
+Inicialmente si solo se tiene los valores nominales se puede ver que este siempre va aumentando, y que alrededor de 1994 empieza a aumentar a una velocidad mucho mayor;sin embargo, aun vez que se analiza el PIB real se puede ver que a pesar de que si va aumentando constantemente el PIB pero que en menor proporcion y mas notorio que el cambio en la velocidad de crecimiento a partir de 1994 es mucho menor. 
+Esto nos dice que a pesar de que la situacion economica del pais ha mejorado, no ha mejorado tanto como inicialmente se nos deja creer.
