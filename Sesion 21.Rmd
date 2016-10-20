@@ -3,7 +3,7 @@ output: html_document
 ---
  
 ```{r Directorio, echo=FALSE ,message=FALSE, results='hide'}
-directorio <- "C:/Users/Hector/Desktop/SESION 20" 
+directorio <- "C:/Users/Hector/Desktop/SESION 21" 
 knitr:: opts_knit$set(root.dir = directorio)
 
 knitr::opts_chunk$set(fig.path = "./GRAFICAS/EXPLORATORIAS/Grafica_", fig.align = 'center',
